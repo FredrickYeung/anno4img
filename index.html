@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Demo</title>
+</head>
+
+<body>
+    <div id="anno-popup" style="display: flex; float: none;">
+        <div class="groups" style="border: 1px solid #ccc; padding: 3px; width: 250px; display: flex; flex-direction: column; min-height: 0px;">
+            <div class="group" style="margin: 5px 0;">
+                <label for="">类别</label>
+                <select name="" id="">
+                    <option value="1">box</option>
+                    <option value="2">can</option>
+                    <option value="3">bottle</option>
+                    <option value="4">cup</option>
+                </select>
+            </div>
+            <div class="group" style="margin: 5px 0;">
+                <label for="">准确度</label>
+                <input type="text">
+            </div>
+            <div class="h-divider" style="height: 1px;width: 100%;background-color: #ccc;"></div>
+            <div class="footer" style="margin-top: 5px;">
+                <button>确定</button>
+                <button>取消</button>
+            </div>
+        </div>
+    </div>
+    <div id="anno4img-container" style="width:800px; height: 700px;">
+    </div>
+    <!--This sets the baseUrl to the "scripts" directory, and loads a script that will have a module ID of 'main'-->
+    <!-- <script data-main="js/app.js" src="js/lib/require.js"></script> -->
+    <script src='js/lib/anno4img.js'></script>
+    <script>
+    var t = anno4img(document.getElementById('anno4img-container'));
+    t.loadImg('images/img_1.png');
+    </script>
+</body>
+
+</html>
