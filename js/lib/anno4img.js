@@ -75,86 +75,90 @@
             annoPopupUtil.hide();
         }
 
+        function init_popup_edit() {
+            var popup_edit = document.createElement('div');
+            popup_edit.setAttribute('id', 'popup-edit');
+            popup_edit.style.display = 'none';
+            popup_edit.style.position = 'absolute';
+            popup_edit.style.float = 'none';
+            popup_edit.style.zIndex = '3';
+
+            var groups = document.createElement('div');
+            groups.setAttribute('class', 'groups');
+            groups.style.border = '1px solid #ccc';
+            groups.style.backgroundColor = '#fff';
+            groups.style.padding = '3px';
+            groups.style.width = '250px';
+            groups.style.display = 'flex';
+            groups.style.flexDirection = 'column';
+            groups.style.minHeight = '0px';
+            popup_edit.appendChild(groups);
+
+            var group = document.createElement('div');
+            group.setAttribute('class', 'group');
+            group.style.margin = '5px 0';
+            groups.appendChild(group);
+
+            var label = document.createElement('label');
+            label.setAttribute('name', '类别');
+            var text = document.createTextNode('类别：');
+            label.appendChild(text);
+            group.appendChild(label);
+
+            var select = document.createElement('select');
+            var arr = ['box', 'can', 'bottle', 'cup'];
+            arr.forEach(function (value) {
+                var option = document.createElement('option');
+                option.setAttribute('value', value);
+                var text = document.createTextNode(value);
+
+                option.appendChild(text);
+                select.appendChild(option);
+            });
+            group.appendChild(select);
+
+            var group = document.createElement('div');
+            group.setAttribute('class', 'group');
+            group.style.margin = '5px 0';
+            groups.appendChild(group);
+
+            var label = document.createElement('label');
+            label.setAttribute('name', '其他');
+            var text = document.createTextNode('其他：');
+            label.appendChild(text);
+            group.appendChild(label);
+
+            var input = document.createElement('input');
+            input.setAttribute('type', 'text');
+            input.setAttribute('placeholder', '......');
+            group.appendChild(input);
+
+            var h_divider = document.createElement('div');
+            h_divider.setAttribute('class', 'h-divider');
+            h_divider.style.height = '1px';
+            h_divider.style.width = '100%';
+            h_divider.style.backgroundColor = '#ccc';
+            groups.appendChild(h_divider);
+
+            var footer = document.createElement('footer');
+            footer.setAttribute('class', 'footer');
+            footer.style.marginTop = '5px';
+            groups.appendChild(footer);
+
+            var button = document.createElement('button');
+            var text = document.createTextNode('确定');
+            button.appendChild(text);
+            footer.appendChild(button);
+            button.addEventListener('click', addDetails, false);
+
+            annoPopupUtil.popup_edit = popup_edit;
+            a4ip.data.ele.appendChild(popup_edit);
+        }
+
         return {
             popup_edit: null,
             init: function () {
-                var popup_edit = document.createElement('div');
-                popup_edit.setAttribute('id', 'popup-edit');
-                popup_edit.style.display = 'none';
-                popup_edit.style.position = 'absolute';
-                popup_edit.style.float = 'none';
-                popup_edit.style.zIndex = '3';
-
-                var groups = document.createElement('div');
-                groups.setAttribute('class', 'groups');
-                groups.style.border = '1px solid #ccc';
-                groups.style.backgroundColor = '#fff';
-                groups.style.padding = '3px';
-                groups.style.width = '250px';
-                groups.style.display = 'flex';
-                groups.style.flexDirection = 'column';
-                groups.style.minHeight = '0px';
-                popup_edit.appendChild(groups);
-
-                var group = document.createElement('div');
-                group.setAttribute('class', 'group');
-                group.style.margin = '5px 0';
-                groups.appendChild(group);
-
-                var label = document.createElement('label');
-                label.setAttribute('name', '类别');
-                var text = document.createTextNode('类别：');
-                label.appendChild(text);
-                group.appendChild(label);
-
-                var select = document.createElement('select');
-                var arr = ['box', 'can', 'bottle', 'cup'];
-                arr.forEach(function (value) {
-                    var option = document.createElement('option');
-                    option.setAttribute('value', value);
-                    var text = document.createTextNode(value);
-
-                    option.appendChild(text);
-                    select.appendChild(option);
-                });
-                group.appendChild(select);
-
-                var group = document.createElement('div');
-                group.setAttribute('class', 'group');
-                group.style.margin = '5px 0';
-                groups.appendChild(group);
-
-                var label = document.createElement('label');
-                label.setAttribute('name', '其他');
-                var text = document.createTextNode('其他：');
-                label.appendChild(text);
-                group.appendChild(label);
-
-                var input = document.createElement('input');
-                input.setAttribute('type', 'text');
-                input.setAttribute('placeholder', '......');
-                group.appendChild(input);
-
-                var h_divider = document.createElement('div');
-                h_divider.setAttribute('class', 'h-divider');
-                h_divider.style.height = '1px';
-                h_divider.style.width = '100%';
-                h_divider.style.backgroundColor = '#ccc';
-                groups.appendChild(h_divider);
-
-                var footer = document.createElement('footer');
-                footer.setAttribute('class', 'footer');
-                footer.style.marginTop = '5px';
-                groups.appendChild(footer);
-
-                var button = document.createElement('button');
-                var text = document.createTextNode('确定');
-                button.appendChild(text);
-                footer.appendChild(button);
-                button.addEventListener('click', addDetails, false);
-
-                annoPopupUtil.popup_edit = popup_edit;
-                a4ip.data.ele.appendChild(popup_edit);
+                init_popup_edit();
             },
             show: function (event, parent) {
                 annoPopupUtil.popup_edit.style.display = 'block';
