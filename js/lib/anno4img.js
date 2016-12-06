@@ -67,6 +67,28 @@
         return localVar;
     };
 
+    // 事件组件类
+    var eventUtil = (function () {
+        return {
+            on: function (obj, events, fn) {
+                obj.listeners = obj.listeners || {};
+                obj.listeners[events] = obj.listeners[events] || [];
+                obj.listeners[events].push(fn);
+            },
+            fire: function (obj, events) {
+                for (var i = 0, n = obj.listeners[events].length; i < n; i++) {
+                    console.log(obj.listeners[events]);
+                    obj.listeners[events][i] && obj.listeners[events][i]();
+                }
+            },
+            off: function (obj, events) {
+                for (var i = 0, n = obj.listeners[events].length; i < n; i++) {
+                    obj.listeners[events][i] = null;
+                }
+            }
+        };
+    })();
+
     // 弹出框组件类
     var annoPopupUtil = (function () {
         function setDetails(popup_ele) {
