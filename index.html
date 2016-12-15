@@ -18,7 +18,16 @@
 <script>
     var t = anno4img(document.getElementById('anno4img-container'));
     t.loadImg('images/img_4.jpg');
-
+    t.setConfig({
+       details: [{
+           type: 'option',
+           name: '类别',
+           list: ['can', 'bottle', 'cup']
+       }, {
+           type: 'label',
+           name: '说明'
+       }]
+    });
     t.addHandler('onAnnotationCreated', function (event) {
         console.log(event.annotation);
     });

@@ -53,11 +53,6 @@
     // 事件组件类
     var eventUtil = (function () {
         return {
-            eventType: {
-                onAnnotationCreated: 'onAnnotationCreated',
-                onAnnotationRemoved: 'onAnnotationRemoved',
-                onAnnotationChanged: 'onAnnotationChanged'
-            },
             addHandler: function (type, fn) {
                 if (typeof localVar.handlers[type] == 'undefined') {
                     localVar.handlers[type] = [];
@@ -94,6 +89,11 @@
     // 弹出框组件类
     var popupUtil = (function () {
 
+        function reset_popup_edit() {
+            var popup_edit = popupUtil.popup_edit;
+
+        }
+
         // 初始化弹出编辑框 div#popup-edit
         function init_popup_edit() {
             var popup_edit = document.createElement('div');
@@ -122,52 +122,44 @@
             groups.style.minHeight = '0px';
             popup_edit.appendChild(groups);
 
-            for(var i = 0; i < details.length; i++) {
+            for (var i = 0; i < details.length; i++) {
+                var detail = details[i];
+                var group = document.createElement('div');
+                group.setAttribute('class', 'group');
+                group.style.margin = '5px 0';
+                groups.appendChild(group);
+
+                var d_name = detail.name;
+                var label = document.createElement('label');
+                label.setAttribute('d-name', d_name);
+                label.setAttribute('d-prop', 'name');
+                var text = document.createTextNode(d_name + '：');
+                label.appendChild(text);
+                group.appendChild(label);
+
+                if(detail.type == FINAL_CONST_FIELD.DETAIL_TYPE.option) {
+                    var d_list = detail.list;
+
+                    var select = document.createElement('select');
+                    select.setAttribute('d-prop', 'value');
+                    d_list.forEach(function (value) {
+                        var option = document.createElement('option');
+                        option.setAttribute('value', value);
+                        var text = document.createTextNode(value);
+                        option.appendChild(text);
+                        select.appendChild(option);
+                    });
+                    group.appendChild(select);
+                }
+                if(detail.type == FINAL_CONST_FIELD.DETAIL_TYPE.label) {
+                    var input = document.createElement('input');
+                    input.setAttribute('d-prop', 'value');
+                    input.setAttribute('type', 'text');
+                    input.setAttribute('placeholder', '......');
+                    group.appendChild(input);
+                }
 
             }
-
-            var group = document.createElement('div');
-            group.setAttribute('class', 'group');
-            group.style.margin = '5px 0';
-            groups.appendChild(group);
-
-            var label = document.createElement('label');
-            label.setAttribute('d-name', '类别');
-            label.setAttribute('d-type', 'name');
-            var text = document.createTextNode('类别：');
-            label.appendChild(text);
-            group.appendChild(label);
-
-            var select = document.createElement('select');
-            select.setAttribute('d-type', 'value');
-            var arr = ['box', 'can', 'bottle', 'cup'];
-            arr.forEach(function (value) {
-                var option = document.createElement('option');
-                option.setAttribute('value', value);
-                var text = document.createTextNode(value);
-
-                option.appendChild(text);
-                select.appendChild(option);
-            });
-            group.appendChild(select);
-
-            var group = document.createElement('div');
-            group.setAttribute('class', 'group');
-            group.style.margin = '5px 0';
-            groups.appendChild(group);
-
-            var label = document.createElement('label');
-            label.setAttribute('d-name', '其他');
-            label.setAttribute('d-type', 'name');
-            var text = document.createTextNode('其他：');
-            label.appendChild(text);
-            group.appendChild(label);
-
-            var input = document.createElement('input');
-            input.setAttribute('d-type', 'value');
-            input.setAttribute('type', 'text');
-            input.setAttribute('placeholder', '......');
-            group.appendChild(input);
 
             var h_divider = document.createElement('div');
             h_divider.setAttribute('class', 'h-divider');
@@ -203,7 +195,8 @@
             popupUtil.popup_info = popup_info;
             localVar.ele.appendChild(popup_info);
 
-            if (localVar.config.detail.length == 0) {
+            var details = localVar.config.details;
+            if (details.length == 0) {
                 return;
             }
 
@@ -218,48 +211,44 @@
             groups.style.minHeight = '0px';
             popup_info.appendChild(groups);
 
-            var group = document.createElement('div');
-            group.setAttribute('class', 'group');
-            group.style.margin = '5px 0';
-            groups.appendChild(group);
+            for (var i = 0; i < details.length; i++) {
+                var detail = details[i];
+                var group = document.createElement('div');
+                group.setAttribute('class', 'group');
+                group.style.margin = '5px 0';
+                groups.appendChild(group);
 
-            var label = document.createElement('label');
-            label.setAttribute('d-type', 'name');
-            label.setAttribute('d-name', '类别');
-            var text = document.createTextNode('类别：');
-            label.appendChild(text);
-            group.appendChild(label);
+                var d_name = detail.name;
+                var label = document.createElement('label');
+                label.setAttribute('d-name', d_name);
+                label.setAttribute('d-prop', 'name');
+                var text = document.createTextNode(d_name + '：');
+                label.appendChild(text);
+                group.appendChild(label);
 
-            var select = document.createElement('select');
-            select.setAttribute('d-type', 'value');
-            var arr = ['box', 'can', 'bottle', 'cup'];
-            arr.forEach(function (value) {
-                var option = document.createElement('option');
-                option.setAttribute('value', value);
-                var text = document.createTextNode(value);
+                if(detail.type == FINAL_CONST_FIELD.DETAIL_TYPE.option) {
+                    var d_list = detail.list;
 
-                option.appendChild(text);
-                select.appendChild(option);
-            });
-            group.appendChild(select);
+                    var select = document.createElement('select');
+                    select.setAttribute('d-prop', 'value');
+                    d_list.forEach(function (value) {
+                        var option = document.createElement('option');
+                        option.setAttribute('value', value);
+                        var text = document.createTextNode(value);
+                        option.appendChild(text);
+                        select.appendChild(option);
+                    });
+                    group.appendChild(select);
+                }
+                if(detail.type == FINAL_CONST_FIELD.DETAIL_TYPE.label) {
+                    var input = document.createElement('input');
+                    input.setAttribute('d-prop', 'value');
+                    input.setAttribute('type', 'text');
+                    input.setAttribute('placeholder', '......');
+                    group.appendChild(input);
+                }
 
-            var group = document.createElement('div');
-            group.setAttribute('class', 'group');
-            group.style.margin = '5px 0';
-            groups.appendChild(group);
-
-            var label = document.createElement('label');
-            label.setAttribute('d-name', '其他');
-            label.setAttribute('d-type', 'name');
-            var text = document.createTextNode('其他：');
-            label.appendChild(text);
-            group.appendChild(label);
-
-            var input = document.createElement('input');
-            input.setAttribute('d-type', 'value');
-            input.setAttribute('type', 'text');
-            input.setAttribute('placeholder', '......');
-            group.appendChild(input);
+            }
 
             var h_divider = document.createElement('div');
             h_divider.setAttribute('class', 'h-divider');
@@ -305,6 +294,7 @@
             footer.appendChild(button);
         }
 
+        // 获取弹出框的位置
         function getPopupPos(pos, ele) {
 
             // var x = pos.clientX - rect.left;
@@ -318,7 +308,6 @@
                 top: top
             };
         }
-
 
         return {
             popup_info: null,
@@ -354,9 +343,9 @@
                 var groups = popupUtil.popup_info.querySelectorAll('.group');
                 for (var i = 0; i < groups.length; i++) {
                     annotation.details.forEach(function (detail) {
-                        var name = groups[i].querySelector('[d-type="name"]').getAttribute('d-name');
+                        var name = groups[i].querySelector('[d-prop="name"]').getAttribute('d-name');
                         if (detail.name == name) {
-                            var v = groups[i].querySelector('[d-type="value"]');
+                            var v = groups[i].querySelector('[d-prop="value"]');
                             v.value = detail.value;
                         }
                     });
@@ -409,8 +398,8 @@
                 var groups = popup_ele.querySelectorAll('.groups .group');
                 var result = [];
                 for (var i = 0; i < groups.length; i++) {
-                    var name = groups[i].querySelector('[d-type="name"]').getAttribute('d-name');
-                    var value = groups[i].querySelector('[d-type="value"]').value;
+                    var name = groups[i].querySelector('[d-prop="name"]').getAttribute('d-name');
+                    var value = groups[i].querySelector('[d-prop="value"]').value;
                     result.push({
                         name: name,
                         value: value
@@ -567,13 +556,13 @@
                     x: event.clientX - rect.left,
                     y: event.clientY - rect.top
                 };
-                if(localVar.config.detail.length != 0) {
+                if (localVar.config.details.length != 0) {
                     popupUtil.show_popup_edit(pos);
                 }
                 annotationUtil.setDetails(popupUtil.popup_edit);
 
                 eventUtil.fire({
-                    type: eventUtil.eventType.onAnnotationCreated,
+                    type: FINAL_CONST_FIELD.EVENT_TYPE.onAnnotationCreated,
                     annotation: annotationUtil.getCurrentAnnotation()
                 });
             }
@@ -675,22 +664,30 @@
         };
     })();
 
-    var util = (function () {
-        return {
-            clearAll: function () {
-                var children = localVar.ele.children;
-                for (var i = 0; i < children.length; i++) {
-                    localVar.ele.removeChild(localVar.ele.children[i]);
-                }
-            }
+    // 常量
+    var FINAL_CONST_FIELD = {
+        EVENT_TYPE: {
+            onAnnotationCreated: 'onAnnotationCreated'
+        },
+        DETAIL_TYPE: {
+            option: 'option',
+            label: 'label'
+        }
+    };
 
-        };
-    })();
-
+    // 存储的数据
     var localVar = {
         currentId: '',
         focusId: '',
         config: {
+            // details: [{
+            //     type: 'option',
+            //     name: '类型',
+            //     list: ['can', 'box', 'bottle', 'cup']
+            // }, {
+            //     type: 'label',
+            //     name: '说明'
+            // }],
             details: [],
             drawingColor: 'red',
             drawingLineWidth: 2,
