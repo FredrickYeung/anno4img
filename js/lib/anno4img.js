@@ -50,48 +50,42 @@
         localVar.ele = selector;
     };
 
-    // 获取所有数据
-    anno4img.fn.getAnnotationsAll = function () {
-        return localVar;
-    };
-
-    anno4img.fn.addHandler = function (type, fn) {
-        if(typeof localVar.handlers[type] == 'undefined') {
-            localVar.handlers[type] = [];
-        }
-        this.handlers[type].push(fn);
-    };
-
-    anno4img.fn.removeHandler = function (type, fn) {
-        if(localVar.handlers[type] instanceof Array) {
-            var fns = localVar.handlers[type];
-            for(var i = 0; i < fns.length; i++) {
-                if(fn == fns[i]) {
-                    break;
-                }
-            }
-            fns.splice(i, 1);
-        }
-    };
-
     // 事件组件类
     var eventUtil = (function () {
-
         return {
-            addHandler: function (obj, events, fn) {
-                obj.listeners = obj.listeners || {};
-                obj.listeners[events] = obj.listeners[events] || [];
-                obj.listeners[events].push(fn);
+            eventType: {
+                onAnnotationCreated: 'onAnnotationCreated',
+                onAnnotationRemoved: 'onAnnotationRemoved',
+                onAnnotationChanged: 'onAnnotationChanged'
             },
-            fire: function (obj, events) {
-                for (var i = 0, n = obj.listeners[events].length; i < n; i++) {
-                    console.log(obj.listeners[events]);
-                    obj.listeners[events][i] && obj.listeners[events][i]();
+            addHandler: function (type, fn) {
+                if (typeof localVar.handlers[type] == 'undefined') {
+                    localVar.handlers[type] = [];
+                }
+                localVar.handlers[type].push(fn);
+            },
+            fire: function (event) {
+                if (!event.target) {
+                    event.target = anno4img.fn;
+                }
+                if (localVar.handlers[event.type] instanceof Array) {
+                    var fns = localVar.handlers[event.type];
+                    for (var i = 0; i < fns.length; i++) {
+                        // 将event传递给事件处理程序，event.target代表对象本身，
+                        // event.type代表事件名,你可以根据情况为添加event属性
+                        fns[i](event);
+                    }
                 }
             },
-            removeHandler: function (obj, events) {
-                for (var i = 0, n = obj.listeners[events].length; i < n; i++) {
-                    obj.listeners[events][i] = null;
+            removeHandler: function (type, fn) {
+                if (localVar.handlers[type] instanceof Array) {
+                    var fns = localVar.handlers[type];
+                    for (var i = 0; i < fns.length; i++) {
+                        if (fn == fns[i]) {
+                            break;
+                        }
+                    }
+                    fns.splice(i, 1);
                 }
             }
         };
@@ -99,19 +93,6 @@
 
     // 弹出框组件类
     var popupUtil = (function () {
-        function setDetails(popup_ele) {
-            var groups = popup_ele.querySelectorAll('.groups .group');
-            var result = [];
-            for (var i = 0; i < groups.length; i++) {
-                var name = groups[i].querySelector('[d-type="name"]').getAttribute('d-name');
-                var value = groups[i].querySelector('[d-type="value"]').value;
-                result.push({
-                    name: name,
-                    value: value
-                });
-            }
-            annotationUtil.setDetails(result);
-        }
 
         // 初始化弹出编辑框 div#popup-edit
         function init_popup_edit() {
@@ -121,6 +102,14 @@
             popup_edit.style.position = 'absolute';
             popup_edit.style.float = 'none';
             popup_edit.style.zIndex = '3';
+
+            popupUtil.popup_edit = popup_edit;
+            localVar.ele.appendChild(popup_edit);
+
+            var details = localVar.config.details;
+            if (details.length == 0) {
+                return;
+            }
 
             var groups = document.createElement('div');
             groups.setAttribute('class', 'groups');
@@ -132,6 +121,10 @@
             groups.style.flexDirection = 'column';
             groups.style.minHeight = '0px';
             popup_edit.appendChild(groups);
+
+            for(var i = 0; i < details.length; i++) {
+
+            }
 
             var group = document.createElement('div');
             group.setAttribute('class', 'group');
@@ -193,12 +186,9 @@
             button.appendChild(text);
             footer.appendChild(button);
             button.addEventListener('click', function () {
-                popupUtil.setDetails(popupUtil.popup_edit);
+                annotationUtil.setDetails(popupUtil.popup_edit);
                 popupUtil.hide_popup_edit();
             }, false);
-
-            popupUtil.popup_edit = popup_edit;
-            localVar.ele.appendChild(popup_edit);
         }
 
         // 初始化信息框 div#popup-info
@@ -209,6 +199,13 @@
             popup_info.style.position = 'absolute';
             popup_info.style.float = 'none';
             popup_info.style.zIndex = '3';
+
+            popupUtil.popup_info = popup_info;
+            localVar.ele.appendChild(popup_info);
+
+            if (localVar.config.detail.length == 0) {
+                return;
+            }
 
             var groups = document.createElement('div');
             groups.setAttribute('class', 'groups');
@@ -279,7 +276,7 @@
             var button = document.createElement('button');
             var text = document.createTextNode('保存');
             button.addEventListener('click', function (event) {
-                popupUtil.setDetails(popupUtil.popup_info);
+                annotationUtil.setDetails(popupUtil.popup_info);
                 popupUtil.hide_popup_info();
                 canvasUtil.clearRect_t();
             }, false);
@@ -306,9 +303,6 @@
             }, false);
             button.appendChild(text);
             footer.appendChild(button);
-
-            popupUtil.popup_info = popup_info;
-            localVar.ele.appendChild(popup_info);
         }
 
         function getPopupPos(pos, ele) {
@@ -331,7 +325,6 @@
             popup_edit: null,
             is_edit_show: false,
             is_info_show: false,
-            setDetails: setDetails,
             init: function () {
                 init_popup_edit();
                 init_popup_info();
@@ -342,7 +335,6 @@
                 popupUtil.popup_edit.style.left = popupPos.left + 'px';
                 popupUtil.popup_edit.style.top = popupPos.top + 'px';
                 popupUtil.is_edit_show = true;
-                setDetails(popupUtil.popup_edit);
             },
             hide_popup_edit: function () {
                 popupUtil.is_edit_show = false;
@@ -362,7 +354,7 @@
                 var groups = popupUtil.popup_info.querySelectorAll('.group');
                 for (var i = 0; i < groups.length; i++) {
                     annotation.details.forEach(function (detail) {
-                        var name = groups[i].getAttribute('detail-name');
+                        var name = groups[i].querySelector('[d-type="name"]').getAttribute('d-name');
                         if (detail.name == name) {
                             var v = groups[i].querySelector('[d-type="value"]');
                             v.value = detail.value;
@@ -383,6 +375,16 @@
     // 数据项组件类
     var annotationUtil = (function () {
         return {
+            getCurrentAnnotation: function () {
+                var annotation = null;
+                var currentId = localVar.currentId;
+                for (var i = 0; i < localVar.annotations.length; i++) {
+                    if (currentId == localVar.annotations[i].id) {
+                        annotation = localVar.annotations[i];
+                    }
+                }
+                return annotation;
+            },
             addAnnotation: function (data) {
                 var date = new Date();
                 var annotation = {};
@@ -403,12 +405,23 @@
                 localVar.annotations.push(annotation);
             },
 
-            setDetails: function (data) {
+            setDetails: function (popup_ele) {
+                var groups = popup_ele.querySelectorAll('.groups .group');
+                var result = [];
+                for (var i = 0; i < groups.length; i++) {
+                    var name = groups[i].querySelector('[d-type="name"]').getAttribute('d-name');
+                    var value = groups[i].querySelector('[d-type="value"]').value;
+                    result.push({
+                        name: name,
+                        value: value
+                    });
+                }
+
                 var currentId = localVar.currentId;
                 var currentAnnotation = localVar.annotations.find(function (value) {
                     return value.id == currentId;
                 });
-                currentAnnotation.details = data;
+                currentAnnotation.details = result;
             },
             removeAnnotation: function () {
                 var currentId = localVar.currentId;
@@ -421,6 +434,8 @@
                 }
                 localVar.annotations.copyWithin(index, index + 1);
                 localVar.annotations.length--;
+
+
             }
         }
     })();
@@ -513,8 +528,6 @@
                         y: o.endY + rect_canvas.top - rect.top
                     };
                     popupUtil.show_popup_info(pos);
-
-
                     break;
                 }
             }
@@ -554,7 +567,15 @@
                     x: event.clientX - rect.left,
                     y: event.clientY - rect.top
                 };
-                popupUtil.show_popup_edit(pos);
+                if(localVar.config.detail.length != 0) {
+                    popupUtil.show_popup_edit(pos);
+                }
+                annotationUtil.setDetails(popupUtil.popup_edit);
+
+                eventUtil.fire({
+                    type: eventUtil.eventType.onAnnotationCreated,
+                    annotation: annotationUtil.getCurrentAnnotation()
+                });
             }
         }
 
@@ -668,7 +689,14 @@
 
     var localVar = {
         currentId: '',
-
+        focusId: '',
+        config: {
+            details: [],
+            drawingColor: 'red',
+            drawingLineWidth: 2,
+            focusColor: 'blue',
+            focusLineWidth: 2
+        },
         img_size: {
             width: 0,
             height: 0
@@ -701,6 +729,23 @@
             canvasUtil.init(img, width, height);
         };
     };
+
+    // 获取所有数据
+    anno4img.fn.getAnnotationsAll = function () {
+        return localVar;
+    };
+
+    // 配置
+    anno4img.fn.setConfig = function (config) {
+        var keys = Object.keys(config);
+        for (var i = 0; i < keys.length; i++) {
+            localVar.config[keys[i]] = config[keys[i]];
+        }
+    };
+
+
+    anno4img.fn.addHandler = eventUtil.addHandler;
+    anno4img.fn.removeHandler = eventUtil.removeHandler;
 
 
     anno4img.fn.init.prototype = anno4img.prototype;

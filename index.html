@@ -18,6 +18,10 @@
 <script>
     var t = anno4img(document.getElementById('anno4img-container'));
     t.loadImg('images/img_4.jpg');
+
+    t.addHandler('onAnnotationCreated', function (event) {
+        console.log(event.annotation);
+    });
 </script>
 </body>
 
