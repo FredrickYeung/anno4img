@@ -22,7 +22,7 @@
         //     ele: element,                    # div元素
         //     canvas: canvas,                  # 底层canvas，用于显示绘制完的图层
         //     canvas_t: canvas_t,              # 顶层canvas，用于绘制中的图层
-        //     rects: [{                        # 存储每个矩形的相关数据
+        //     annotations: [{                        # 存储每个矩形的相关数据
         //         id: new Date().valueOf(),    # 采用时间戳作为id
         //         geometry: {                  # 矩形相关坐标
         //             startX: 0.0001,
@@ -42,20 +42,8 @@
         //         }]
         //     }]
         // }
-        data: {
-            ele: null,
-            img_size: {
-                width: 0,
-                height: 0
-            },
-            canvas: null,
-            canvas_t: null,
-            rects: []
-        },
-        tempData: null
+        listeners: {}
     };
-
-    var a4ip = anno4img.prototype;
 
     anno4img.fn.init = function (selector) {
         selector.style.position = 'relative';
@@ -63,14 +51,34 @@
     };
 
     // 获取所有数据
-    anno4img.fn.getRectsAll = function () {
+    anno4img.fn.getAnnotationsAll = function () {
         return localVar;
+    };
+
+    anno4img.fn.addHandler = function (type, fn) {
+        if(typeof localVar.handlers[type] == 'undefined') {
+            localVar.handlers[type] = [];
+        }
+        this.handlers[type].push(fn);
+    };
+
+    anno4img.fn.removeHandler = function (type, fn) {
+        if(localVar.handlers[type] instanceof Array) {
+            var fns = localVar.handlers[type];
+            for(var i = 0; i < fns.length; i++) {
+                if(fn == fns[i]) {
+                    break;
+                }
+            }
+            fns.splice(i, 1);
+        }
     };
 
     // 事件组件类
     var eventUtil = (function () {
+
         return {
-            on: function (obj, events, fn) {
+            addHandler: function (obj, events, fn) {
                 obj.listeners = obj.listeners || {};
                 obj.listeners[events] = obj.listeners[events] || [];
                 obj.listeners[events].push(fn);
@@ -81,7 +89,7 @@
                     obj.listeners[events][i] && obj.listeners[events][i]();
                 }
             },
-            off: function (obj, events) {
+            removeHandler: function (obj, events) {
                 for (var i = 0, n = obj.listeners[events].length; i < n; i++) {
                     obj.listeners[events][i] = null;
                 }
@@ -90,7 +98,7 @@
     })();
 
     // 弹出框组件类
-    var annoPopupUtil = (function () {
+    var popupUtil = (function () {
         function setDetails(popup_ele) {
             var groups = popup_ele.querySelectorAll('.groups .group');
             var result = [];
@@ -102,7 +110,7 @@
                     value: value
                 });
             }
-            rectUtil.setDetails(result);
+            annotationUtil.setDetails(result);
         }
 
         // 初始化弹出编辑框 div#popup-edit
@@ -127,7 +135,6 @@
 
             var group = document.createElement('div');
             group.setAttribute('class', 'group');
-            group.setAttribute('detail-name', '类别');
             group.style.margin = '5px 0';
             groups.appendChild(group);
 
@@ -157,7 +164,7 @@
             groups.appendChild(group);
 
             var label = document.createElement('label');
-            label.setAttribute('name', '其他');
+            label.setAttribute('d-name', '其他');
             label.setAttribute('d-type', 'name');
             var text = document.createTextNode('其他：');
             label.appendChild(text);
@@ -186,11 +193,11 @@
             button.appendChild(text);
             footer.appendChild(button);
             button.addEventListener('click', function () {
-                annoPopupUtil.setDetails(annoPopupUtil.popup_edit);
-                annoPopupUtil.hide_popup_edit();
+                popupUtil.setDetails(popupUtil.popup_edit);
+                popupUtil.hide_popup_edit();
             }, false);
 
-            annoPopupUtil.popup_edit = popup_edit;
+            popupUtil.popup_edit = popup_edit;
             localVar.ele.appendChild(popup_edit);
         }
 
@@ -216,12 +223,10 @@
 
             var group = document.createElement('div');
             group.setAttribute('class', 'group');
-            group.setAttribute('detail-name', '类别');
             group.style.margin = '5px 0';
             groups.appendChild(group);
 
             var label = document.createElement('label');
-            label.setAttribute('name', '类别');
             label.setAttribute('d-type', 'name');
             label.setAttribute('d-name', '类别');
             var text = document.createTextNode('类别：');
@@ -247,7 +252,7 @@
             groups.appendChild(group);
 
             var label = document.createElement('label');
-            label.setAttribute('name', '其他');
+            label.setAttribute('d-name', '其他');
             label.setAttribute('d-type', 'name');
             var text = document.createTextNode('其他：');
             label.appendChild(text);
@@ -274,8 +279,8 @@
             var button = document.createElement('button');
             var text = document.createTextNode('保存');
             button.addEventListener('click', function (event) {
-                annoPopupUtil.setDetails(annoPopupUtil.popup_info);
-                annoPopupUtil.hide_popup_info();
+                popupUtil.setDetails(popupUtil.popup_info);
+                popupUtil.hide_popup_info();
                 canvasUtil.clearRect_t();
             }, false);
             button.appendChild(text);
@@ -284,10 +289,10 @@
             var button = document.createElement('button');
             var text = document.createTextNode('删除');
             button.addEventListener('click', function (event) {
-                annoPopupUtil.hide_popup_info();
+                popupUtil.hide_popup_info();
                 canvasUtil.clearRect_t();
                 canvasUtil.clearRect();
-                rectUtil.removeRect();
+                annotationUtil.removeAnnotation();
                 canvasUtil.drawAll();
             }, false);
             button.appendChild(text);
@@ -296,13 +301,13 @@
             var button = document.createElement('button');
             var text = document.createTextNode('取消');
             button.addEventListener('click', function (event) {
-                annoPopupUtil.hide_popup_info();
+                popupUtil.hide_popup_info();
                 canvasUtil.clearRect_t();
             }, false);
             button.appendChild(text);
             footer.appendChild(button);
 
-            annoPopupUtil.popup_info = popup_info;
+            popupUtil.popup_info = popup_info;
             localVar.ele.appendChild(popup_info);
         }
 
@@ -332,31 +337,31 @@
                 init_popup_info();
             },
             show_popup_edit: function (pos) {
-                annoPopupUtil.popup_edit.style.display = 'block';
-                var popupPos = getPopupPos(pos, annoPopupUtil.popup_edit);
-                annoPopupUtil.popup_edit.style.left = popupPos.left + 'px';
-                annoPopupUtil.popup_edit.style.top = popupPos.top + 'px';
-                annoPopupUtil.is_edit_show = true;
-                setDetails(annoPopupUtil.popup_edit);
+                popupUtil.popup_edit.style.display = 'block';
+                var popupPos = getPopupPos(pos, popupUtil.popup_edit);
+                popupUtil.popup_edit.style.left = popupPos.left + 'px';
+                popupUtil.popup_edit.style.top = popupPos.top + 'px';
+                popupUtil.is_edit_show = true;
+                setDetails(popupUtil.popup_edit);
             },
             hide_popup_edit: function () {
-                annoPopupUtil.is_edit_show = false;
-                annoPopupUtil.popup_edit.style.display = 'none';
+                popupUtil.is_edit_show = false;
+                popupUtil.popup_edit.style.display = 'none';
             },
             show_popup_info: function (pos) {
-                annoPopupUtil.popup_info.style.display = 'block';
-                var popupPos = getPopupPos(pos, annoPopupUtil.popup_info);
-                annoPopupUtil.popup_info.style.left = popupPos.left + 'px';
-                annoPopupUtil.popup_info.style.top = popupPos.top - 3 + 'px';
-                var rect = null;
-                localVar.rects.forEach(function (value) {
+                popupUtil.popup_info.style.display = 'block';
+                var popupPos = getPopupPos(pos, popupUtil.popup_info);
+                popupUtil.popup_info.style.left = popupPos.left + 'px';
+                popupUtil.popup_info.style.top = popupPos.top - 3 + 'px';
+                var annotation = null;
+                localVar.annotations.forEach(function (value) {
                     if (value.id == localVar.currentId) {
-                        rect = value;
+                        annotation = value;
                     }
                 });
-                var groups = annoPopupUtil.popup_info.querySelectorAll('.group');
+                var groups = popupUtil.popup_info.querySelectorAll('.group');
                 for (var i = 0; i < groups.length; i++) {
-                    rect.details.forEach(function (detail) {
+                    annotation.details.forEach(function (detail) {
                         var name = groups[i].getAttribute('detail-name');
                         if (detail.name == name) {
                             var v = groups[i].querySelector('[d-type="value"]');
@@ -365,57 +370,57 @@
                     });
                 }
 
-                annoPopupUtil.is_info_show = true;
+                popupUtil.is_info_show = true;
             },
             hide_popup_info: function () {
-                annoPopupUtil.is_info_show = false;
-                annoPopupUtil.popup_info.style.display = 'none';
+                popupUtil.is_info_show = false;
+                popupUtil.popup_info.style.display = 'none';
             }
         };
 
     })();
 
     // 数据项组件类
-    var rectUtil = (function () {
+    var annotationUtil = (function () {
         return {
-            addRect: function (data) {
+            addAnnotation: function (data) {
                 var date = new Date();
-                var rect = {};
-                rect.id = date.valueOf();
-                localVar.currentId = rect.id;
-                rect.geometry = {
+                var annotation = {};
+                annotation.id = date.valueOf();
+                localVar.currentId = annotation.id;
+                annotation.geometry = {
                     startX: data.startX / localVar.canvas.width,
                     startY: data.startY / localVar.canvas.height,
                     endX: data.endX / localVar.canvas.width,
                     endY: data.endY / localVar.canvas.height
                 };
-                rect.o_geometry = {
+                annotation.o_geometry = {
                     startX: data.startX,
                     startY: data.startY,
                     endX: data.endX,
                     endY: data.endY
                 };
-                localVar.rects.push(rect);
+                localVar.annotations.push(annotation);
             },
 
             setDetails: function (data) {
                 var currentId = localVar.currentId;
-                var currentRect = localVar.rects.find(function (value) {
+                var currentAnnotation = localVar.annotations.find(function (value) {
                     return value.id == currentId;
                 });
-                currentRect.details = data;
+                currentAnnotation.details = data;
             },
-            removeRect: function () {
+            removeAnnotation: function () {
                 var currentId = localVar.currentId;
                 var index = null;
-                for (var i = 0; i < localVar.rects.length; i++) {
-                    if (localVar.rects[i].id == currentId) {
+                for (var i = 0; i < localVar.annotations.length; i++) {
+                    if (localVar.annotations[i].id == currentId) {
                         index = i;
                         break;
                     }
                 }
-                localVar.rects.copyWithin(index, index + 1);
-                localVar.rects.length--;
+                localVar.annotations.copyWithin(index, index + 1);
+                localVar.annotations.length--;
             }
         }
     })();
@@ -471,33 +476,33 @@
             startX = mousePos.x;
             startY = mousePos.y;
 
-            annoPopupUtil.hide_popup_edit();
-            annoPopupUtil.hide_popup_info();
+            popupUtil.hide_popup_edit();
+            popupUtil.hide_popup_info();
         }
 
         function on_focus(event) {
             if (isDrawable) {
                 return;
             }
-            if (annoPopupUtil.is_edit_show) {
+            if (popupUtil.is_edit_show) {
                 return;
             }
             var mousePos = getMousePos(event);
-            var rects = localVar.rects;
+            var annotations = localVar.annotations;
             var context = localVar.ctx_t;
 
-            for (var i = 0; i < rects.length; i++) {
+            for (var i = 0; i < annotations.length; i++) {
                 var o = {
-                    startX: rects[i].o_geometry.startX,
-                    endX: rects[i].o_geometry.endX,
-                    startY: rects[i].o_geometry.startY,
-                    endY: rects[i].o_geometry.endY
+                    startX: annotations[i].o_geometry.startX,
+                    endX: annotations[i].o_geometry.endX,
+                    startY: annotations[i].o_geometry.startY,
+                    endY: annotations[i].o_geometry.endY
                 };
 
                 if (mousePos.x > o.startX && mousePos.x < o.endX && mousePos.y > o.startY && mousePos.y < o.endY) {
-                    localVar.currentId = rects[i].id;
+                    localVar.currentId = annotations[i].id;
                     canvasUtil.clearRect_t();
-                    annoPopupUtil.hide_popup_info();
+                    popupUtil.hide_popup_info();
 
                     context.strokeStyle = 'blue';
                     context.strokeRect(o.startX, o.startY, o.endX - o.startX, o.endY - o.startY);
@@ -507,7 +512,7 @@
                         x: o.startX + rect_canvas.left - rect.left,
                         y: o.endY + rect_canvas.top - rect.top
                     };
-                    annoPopupUtil.show_popup_info(pos);
+                    popupUtil.show_popup_info(pos);
 
 
                     break;
@@ -537,7 +542,7 @@
                     return;
                 }
                 drawedRect();
-                rectUtil.addRect({
+                annotationUtil.addAnnotation({
                     startX: startX,
                     startY: startY,
                     endX: endX,
@@ -549,19 +554,19 @@
                     x: event.clientX - rect.left,
                     y: event.clientY - rect.top
                 };
-                annoPopupUtil.show_popup_edit(pos);
+                popupUtil.show_popup_edit(pos);
             }
         }
 
         function drawAll() {
             localVar.ctx.drawImage(localVar.img, 0, 0, localVar.img_size.width, localVar.img_size.height);
-            var rects = localVar.rects;
-            for (var i = 0; i < rects.length; i++) {
+            var annotations = localVar.annotations;
+            for (var i = 0; i < annotations.length; i++) {
                 var o = {
-                    x: rects[i].o_geometry.startX,
-                    y: rects[i].o_geometry.startY,
-                    width: rects[i].o_geometry.endX - rects[i].o_geometry.startX,
-                    height: rects[i].o_geometry.endY - rects[i].o_geometry.startY
+                    x: annotations[i].o_geometry.startX,
+                    y: annotations[i].o_geometry.startY,
+                    width: annotations[i].o_geometry.endX - annotations[i].o_geometry.startX,
+                    height: annotations[i].o_geometry.endY - annotations[i].o_geometry.startY
                 };
                 localVar.ctx.strokeStyle = 'red';
                 localVar.ctx.strokeRect(o.x, o.y, o.width, o.height);
@@ -627,7 +632,7 @@
             var ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            annoPopupUtil.init();
+            popupUtil.init();
         };
 
         return {
@@ -636,13 +641,13 @@
             clearRect_t: function () {
                 localVar.ctx_t.clearRect(0, 0, localVar.canvas_t.width, localVar.canvas_t.height);
             },
-            removeRect: function () {
-                annoPopupUtil.hide_popup_info();
-                canvasUtil.clearRect_t();
-                canvasUtil.clearRect();
-                rectUtil.removeRect();
-                drawAll();
-            },
+            // removeRect: function () {
+            //     popupUtil.hide_popup_info();
+            //     canvasUtil.clearRect_t();
+            //     canvasUtil.clearRect();
+            //     annotationUtil.removeRect();
+            //     drawAll();
+            // },
             clearRect: function () {
                 localVar.ctx.clearRect(0, 0, localVar.canvas.width, localVar.canvas.height);
             }
@@ -668,7 +673,8 @@
             width: 0,
             height: 0
         },
-        rects: []
+        annotations: [],
+        handlers: {}
     };
 
     anno4img.fn.loadImg = function (imgSrc) {
